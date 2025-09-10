@@ -1,6 +1,6 @@
 import os
 
-UPSTREAM_URL = os.getenv("UPSTREAM_URL", "https://score.hsborges.dev/score")
+UPSTREAM_URL = os.getenv("UPSTREAM_URL", "https://score.hsborges.dev/api/score")
 RATE_LIMIT_INTERVAL = float(os.getenv("RATE_LIMIT_INTERVAL", "1.0"))
 QUEUE_MAX_SIZE = int(os.getenv("QUEUE_MAX_SIZE", "200"))
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "5.0"))

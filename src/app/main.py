@@ -1,52 +1,65 @@
 import asyncio
-from fastapi import FastAPI, HTTPException
-from prometheus_client import start_http_server
-from app.services.queue import RequestQueue, QueueItem
-from app.services.circuit import CircuitBreaker
-from app.services.scheduler import Scheduler
-from app.observers.log_observer import LogObserver
-from app.observers.metrics_observer import MetricsObserver
-import uuid
 import time
+import uuid
+from fastapi import FastAPI, HTTPException, Query
+from app.services.queue import RequestQueue, QueueItem, QueueFullError
+from app.patterns.command import Command
+
+QUEUE_MAX_SIZE = 200
+REQUEST_TTL = 30
 
 app = FastAPI()
-
-# --- Setup observers
-log_obs = LogObserver()
-metrics_obs = MetricsObserver()
-
-rq = RequestQueue()
-rq.attach(log_obs)
-rq.attach(metrics_obs)
-
-circuit = CircuitBreaker()
-circuit.attach(log_obs)
-circuit.attach(metrics_obs)
-
-# --- Start Prometheus metrics server
-start_http_server(8001)
-
-# --- Start scheduler
-scheduler = Scheduler(rate_limit_per_sec=1, use_cache=True)
-asyncio.create_task(scheduler.run())
+rq = RequestQueue(max_size=QUEUE_MAX_SIZE)
 
 @app.get("/health")
 async def health():
-    return {"status":"ok","queue_size":len(rq),"circuit":circuit.state}
-
-@app.get("/metrics")
-async def metrics():
-    return {"message":"Metrics server running at port 8001"}
+    """Health check simples."""
+    return {"status": "ok", "queue_size": await rq.size()}
 
 @app.get("/proxy/score")
-async def proxy_score(q: str, priority: int = 50, ttl: int = 30):
-    import asyncio
+async def proxy_score(cpf: str = Query(...)):
+    """
+    Proxy para o upstream score.hsborges.dev
+    - cpf: obrigatório
+    """
     fut = asyncio.get_event_loop().create_future()
-    item = QueueItem(priority=priority, created_at=time.time(), deadline=time.time()+ttl,
-                     id=str(uuid.uuid4()), params={"q":q}, future=fut)
-    await rq.put(item)
+    item = QueueItem(
+        priority=50,
+        created_at=time.time(),
+        deadline=time.time() + REQUEST_TTL,
+        id=str(uuid.uuid4()),
+        params={"cpf": cpf},
+        future=fut
+    )
     try:
-        result = await asyncio.wait_for(fut, timeout=10)
+        await rq.put(item)
+    except QueueFullError:
+        raise HTTPException(status_code=503, detail="Queue full, request dropped")
+
+    try:
+        result = await asyncio.wait_for(fut, timeout=REQUEST_TTL + 5)
         return result
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Timeout waiting upstream")
+
+async def scheduler_worker():
+    while True:
+        try:
+            item = await rq.get()
+        except asyncio.QueueEmpty:
+            await asyncio.sleep(0.1)
+            continue
+
+        if item.deadline and time.time() > item.deadline:
+            item.future.set_result({"status": "DROPPED", "reason": "ttl_expired"})
+            continue
+
+        cpf = item.params.get("cpf")
+        command = Command(cpf=cpf)
+        result = await command.execute()
+        item.future.set_result(result)
+        await asyncio.sleep(1)
+
+@app.on_event("startup")
+async def startup():
+    asyncio.create_task(scheduler_worker())

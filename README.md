@@ -119,3 +119,17 @@ uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```bash
 docker-compose up --build
 ```
+
+
+### Como testar
+
+Com o server rodando rode
+```python3 
+python test2.py
+```
+
+ou
+
+```python3
+python test3.py
+```
