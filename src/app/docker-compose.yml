@@ -1,0 +1,9 @@
+version: "3.9"
+services:
+  proxy:
+    build: .
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+    environment:
+      UPSTREAM_URL: "https://score.hsborges.dev/score"
