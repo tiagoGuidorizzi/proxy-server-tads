@@ -30,7 +30,6 @@ Este projeto implementa um **serviço proxy interno** para consumir a API extern
 - **Command:** encapsula requisições ao upstream.
 - **Singleton:** garante instâncias únicas de filas e cache.
 - **Decorator:** adiciona logging, retry e cache dinamicamente.
-- **Iterator:** permite percorrer fila de requisições.
 - **Observer:** notifica eventos de fila e estado do circuito.
 - **Circuit Breaker e Scheduler**: controlam chamadas e falhas do upstream.
 

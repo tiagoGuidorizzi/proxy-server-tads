@@ -1,18 +1,21 @@
 import httpx
 import os
 from typing import Any, Dict
+from app.patterns.decorator import CacheDecorator 
 
 UPSTREAM_URL = os.getenv("UPSTREAM_URL", "https://score.hsborges.dev/api/score")
 REQUEST_TIMEOUT = float(os.getenv("REQUEST_TIMEOUT", "5.0"))
-CLIENT_ID = os.getenv("CLIENT_ID", "1") 
+CLIENT_ID = os.getenv("CLIENT_ID", "1")
+
 
 class Command:
     def __init__(self, cpf: str):
         self.endpoint = UPSTREAM_URL
         self.params = {"cpf": cpf}
 
+    @CacheDecorator(ttl=30)
     async def execute(self) -> Dict[str, Any]:
-        """Executa a chamada HTTP real ao upstream."""
+        """Executa a chamada HTTP real ao upstream (com cache)."""
         headers = {
             "accept": "application/json",
             "client-id": CLIENT_ID
@@ -24,15 +27,9 @@ class Command:
                     data = response.json() if response.content else None
                 except ValueError:
                     data = response.text
-                return {
-                    "endpoint": self.endpoint,
-                    "params": self.params,
-                    "status_code": response.status_code,
-                    "body": data
-                }
+                return data
             except httpx.RequestError as e:
                 return {
-                    "endpoint": self.endpoint,
                     "params": self.params,
                     "status": "error",
                     "error": str(e)

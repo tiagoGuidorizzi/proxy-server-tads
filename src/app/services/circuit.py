@@ -1,6 +1,6 @@
 import time
-from app.patterns.singleton import SingletonMeta
-from app.patterns.observer import Observable
+from patterns.singleton import SingletonMeta
+from patterns.observer import Observable
 
 
 class CircuitBreaker(Observable, metaclass=SingletonMeta):

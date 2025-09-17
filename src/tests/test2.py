@@ -16,7 +16,7 @@ async def make_request(session, cpf_value):
 
 async def burst_requests():
     async with aiohttp.ClientSession() as session:
-        tasks = [make_request(session, f"1111111111{i}") for i in range(NUM_REQUESTS)]
+        tasks = [make_request(session, f"123491203{i}") for i in range(NUM_REQUESTS)]
         start = time.time()
         responses = await asyncio.gather(*tasks)
         elapsed = time.time() - start

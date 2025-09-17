@@ -1,5 +1,5 @@
 import logging
-from app.patterns.observer import Observer
+from patterns.observer import Observer
 
 logger = logging.getLogger("proxy_service")
 

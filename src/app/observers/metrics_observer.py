@@ -1,5 +1,5 @@
 from prometheus_client import Counter, Gauge
-from app.patterns.observer import Observer
+from patterns.observer import Observer
 
 # Contadores e gauges do Prometheus
 REQUESTS_ENQUEUED = Counter("proxy_requests_enqueued_total", "Total de requisições enfileiradas")

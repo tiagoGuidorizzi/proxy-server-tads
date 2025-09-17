@@ -1,9 +1,9 @@
 import asyncio
 import time
-from app.services.queue import RequestQueue, QueueItem, QueueFullError
-from app.services.circuit import CircuitBreaker
-from app.patterns.command import Command
-from app.patterns.decorator import CacheDecorator
+from patterns.singleton import RequestQueue, QueueItem, QueueFullError
+from services.circuit import CircuitBreaker
+from patterns.command import Command
+from patterns.decorator import CacheDecorator
 
 class Scheduler:
     

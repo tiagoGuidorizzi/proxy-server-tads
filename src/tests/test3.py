@@ -4,15 +4,15 @@ import time
 
 PROXY_URL = "http://localhost:8000/proxy/score"
 
-NUM_REQUESTS = 30        
+NUM_REQUESTS = 10        
 BURST_INTERVAL = 0.05    
 
 # Lista de CPFs fictícios para teste
 TEST_CPFS = [
-    "11111111111", "22222222222", "33333333333", 
-    "44444444444", "55555555555", "66666666666",
-    "77777777777", "88888888888", "99999999999",
-    "00000000000"
+    "72582622370", "03397339693", "27397278876", 
+    "75101055603", "70910722609", "31454669411",
+    "99586270785", "41712508032", "27298532510",
+    "05837519971"
 ]
 
 async def make_request(session, cpf):
@@ -52,11 +52,11 @@ async def run_burst():
 def summarize_results(results):
     total = len(results)
     errors = sum(1 for r in results if r.get("status") == "error")
-    print(f"Total requests: {total}")
-    print(f"Errors: {errors}")
-    print("\nSample responses:")
+    print(f"Total de requisições: {total}")
+    print(f"Erros: {errors}")
+    print("\nRespostas:")
     for r in results[:5]:
-        print(r)
+        print("\n- Requisição:", r.get("response", r.get("cpf")), "\n- Status:", r.get("status_code", r.get("status")), "\n- Latência: {:.2f}s".format(r["latency"]))
 
 if __name__ == "__main__":
     results = asyncio.run(run_burst())
